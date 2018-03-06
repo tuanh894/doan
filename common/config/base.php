@@ -1,18 +1,16 @@
 <?php
 $config = [
-    'name' => 'Yii2 Starter Kit',
-    'vendorPath' => __DIR__ . '/../../vendor',
+    'name' => 'Study247',
+    'vendorPath' => dirname(dirname(__DIR__)) . '/vendor',
     'extensions' => require(__DIR__ . '/../../vendor/yiisoft/extensions.php'),
     'sourceLanguage' => 'en-US',
     'language' => 'en-US',
+    'timeZone' => 'Asia/Bangkok',
     'bootstrap' => ['log'],
-    'aliases' => [
-        '@bower' => '@vendor/bower-asset',
-        '@npm' => '@vendor/npm-asset',
-    ],
     'components' => [
+
         'authManager' => [
-            'class' => yii\rbac\DbManager::class,
+            'class' => 'yii\rbac\DbManager',
             'itemTable' => '{{%rbac_auth_item}}',
             'itemChildTable' => '{{%rbac_auth_item_child}}',
             'assignmentTable' => '{{%rbac_auth_assignment}}',
@@ -20,15 +18,15 @@ $config = [
         ],
 
         'cache' => [
-            'class' => yii\caching\FileCache::class,
+            'class' => 'yii\caching\FileCache',
             'cachePath' => '@common/runtime/cache'
         ],
 
         'commandBus' => [
-            'class' => trntv\bus\CommandBus::class,
+            'class' => 'trntv\bus\CommandBus',
             'middlewares' => [
                 [
-                    'class' => trntv\bus\middlewares\BackgroundCommandMiddleware::class,
+                    'class' => '\trntv\bus\middlewares\BackgroundCommandMiddleware',
                     'backgroundHandlerPath' => '@console/yii',
                     'backgroundHandlerRoute' => 'command-bus/handle',
                 ]
@@ -36,11 +34,11 @@ $config = [
         ],
 
         'formatter' => [
-            'class' => yii\i18n\Formatter::class
+            'class' => 'yii\i18n\Formatter'
         ],
 
         'glide' => [
-            'class' => trntv\glide\components\Glide::class,
+            'class' => 'trntv\glide\components\Glide',
             'sourcePath' => '@storage/web/source',
             'cachePath' => '@storage/cache',
             'urlManager' => 'urlManagerStorage',
@@ -49,29 +47,39 @@ $config = [
         ],
 
         'mailer' => [
-            'class' => yii\swiftmailer\Mailer::class,
+            'class' => 'yii\swiftmailer\Mailer',
+            'transport' => [
+                'class' => 'Swift_SmtpTransport',
+                //'host' => '74.125.204.109',
+                //'host' => 'smtp.gmail.com',
+                'host' => env('HOST_EMAIL'),
+                'username' => env('USERNAME_EMAIL'),
+                'password' => env('PASSWORD_EMAIL'),
+                //'port' => '587',
+                'port' => '465',
+                'encryption' => 'tls',
+            ],
+            //'useFileTransport' => true,
             'messageConfig' => [
                 'charset' => 'UTF-8',
                 'from' => env('ADMIN_EMAIL')
             ]
         ],
-
         'db' => [
-            'class' => yii\db\Connection::class,
+            'class' => 'yii\db\Connection',
             'dsn' => env('DB_DSN'),
             'username' => env('DB_USERNAME'),
             'password' => env('DB_PASSWORD'),
             'tablePrefix' => env('DB_TABLE_PREFIX'),
-            'charset' => env('DB_CHARSET', 'utf8'),
+            'charset' => 'utf8',
             'enableSchemaCache' => YII_ENV_PROD,
         ],
-
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
                 'db' => [
                     'class' => 'yii\log\DbTarget',
-                    'levels' => ['error', 'warning'],
+                    'levels' => ['error', 'warning','info'],
                     'except' => ['yii\web\HttpException:*', 'yii\i18n\I18N\*'],
                     'prefix' => function () {
                         $url = !Yii::$app->request->isConsoleRequest ? Yii::$app->request->getUrl() : null;
@@ -79,25 +87,47 @@ $config = [
                     },
                     'logVars' => [],
                     'logTable' => '{{%system_log}}'
-                ]
+                ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['error', 'warning', 'info'],
+                ],
+//                [
+//                    'class' => 'yii\log\FileTarget',
+//                    'levels' => ['error'],
+//                    'logVars' => [],
+//                    //'categories' => ['orders'],
+//                    'logFile' => '@app/runtime/logs/app.log',
+//                    'maxFileSize' => 1024 * 2,
+//                    'maxLogFiles' => 20,
+//                ],
+//                [
+//                    'class' => 'yii\log\FileTarget',
+//                    'levels' => ['info'],
+//                    //'logVars' => [''],
+//                    'categories' => ['pushNotifications'],
+//                    'logFile' => '@app/runtime/logs/notification.log',
+//                    'maxFileSize' => 1024 * 2,
+//                    'maxLogFiles' => 50,
+//                ],
             ],
         ],
 
         'i18n' => [
             'translations' => [
                 'app' => [
-                    'class' => yii\i18n\PhpMessageSource::class,
+                    'class' => 'yii\i18n\PhpMessageSource',
                     'basePath' => '@common/messages',
                 ],
                 '*' => [
-                    'class' => yii\i18n\PhpMessageSource::class,
+                    'class' => 'yii\i18n\PhpMessageSource',
                     'basePath' => '@common/messages',
                     'fileMap' => [
                         'common' => 'common.php',
                         'backend' => 'backend.php',
                         'frontend' => 'frontend.php',
                     ],
-                    'on missingTranslation' => [backend\modules\i18n\Module::class, 'missingTranslation']
+                    'on missingTranslation' => ['\backend\modules\i18n\Module', 'missingTranslation']
                 ],
                 /* Uncomment this code to use DbMessageSource
                  '*'=> [
@@ -112,21 +142,42 @@ $config = [
             ],
         ],
 
-        'fileStorage' => [
-            'class' => trntv\filekit\Storage::class,
-            'baseUrl' => '@storageUrl/source',
+        'supportStorage' => [
+            'class' => '\trntv\filekit\Storage',
+            'baseUrl' => '@storageUrl/support',
             'filesystem' => [
-                'class' => common\components\filesystem\LocalFlysystemBuilder::class,
-                'path' => '@storage/web/source'
+                'class' => 'common\components\filesystem\LocalFlysystemBuilder',
+                'path' => '@storage/web/support'
             ],
             'as log' => [
-                'class' => common\behaviors\FileStorageLogBehavior::class,
-                'component' => 'fileStorage'
+                'class' => 'common\behaviors\FileStorageLogBehavior',
+                'component' => 'supportStorage'
             ]
         ],
 
+        'fileStorage' => [
+            'class' => '\trntv\filekit\Storage',
+            'baseUrl' => '@storageUrl/media',
+            'filesystem' => [
+                'class' => 'common\components\filesystem\LocalFlysystemBuilder',
+                'path' => '@storage/web/media'
+            ],
+            'as log' => [
+                'class' => 'common\behaviors\FileStorageLogBehavior',
+                'component' => 'fileStorage'
+            ]
+        ],
+        'questionImageStorage' => [
+            'class' => '\trntv\filekit\Storage',
+            'baseUrl' => '@storageUrl/media/question',
+            'filesystem' => [
+                'class' => 'common\components\filesystem\LocalFlysystemBuilder',
+                'path' => '@storage/web/media/question'
+            ],
+        ],
+
         'keyStorage' => [
-            'class' => common\components\keyStorage\KeyStorage::class
+            'class' => 'common\components\keyStorage\KeyStorage'
         ],
 
         'urlManagerBackend' => \yii\helpers\ArrayHelper::merge(
@@ -149,45 +200,35 @@ $config = [
                 'baseUrl' => env('STORAGE_BASE_URL'),
             ],
             require(Yii::getAlias('@storage/config/_urlManager.php'))
-        ),
-
-        'queue' => [
-            'class' => \yii\queue\file\Queue::class,
-            'path' => '@common/runtime/queue',
-        ],
+        )
     ],
     'params' => [
         'adminEmail' => env('ADMIN_EMAIL'),
         'robotEmail' => env('ROBOT_EMAIL'),
         'availableLocales' => [
             'en-US' => 'English (US)',
-            'ru-RU' => 'Русский (РФ)',
-            'uk-UA' => 'Українська (Україна)',
-            'es' => 'Español',
             'vi' => 'Tiếng Việt',
-            'zh-CN' => '简体中文',
-            'pl-PL' => 'Polski (PL)',
         ],
     ],
 ];
 
 if (YII_ENV_PROD) {
-    $config['components']['log']['targets']['email'] = [
-        'class' => yii\log\EmailTarget::class,
-        'except' => ['yii\web\HttpException:*'],
-        'levels' => ['error', 'warning'],
-        'message' => ['from' => env('ROBOT_EMAIL'), 'to' => env('ADMIN_EMAIL')]
-    ];
+//    $config['components']['log']['targets']['email'] = [
+//        'class' => 'yii\log\EmailTarget',
+//        'except' => ['yii\web\HttpException:*'],
+//        'levels' => ['error', 'warning'],
+//        'message' => ['from' => env('ROBOT_EMAIL'), 'to' => env('ADMIN_EMAIL')]
+//    ];
 }
 
 if (YII_ENV_DEV) {
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
-        'class' => yii\gii\Module::class
+        'class' => 'yii\gii\Module'
     ];
 
     $config['components']['cache'] = [
-        'class' => yii\caching\DummyCache::class
+        'class' => 'yii\caching\DummyCache'
     ];
     $config['components']['mailer']['transport'] = [
         'class' => 'Swift_SmtpTransport',
